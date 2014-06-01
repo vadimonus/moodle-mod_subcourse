@@ -147,20 +147,36 @@ class mod_subcourse_mod_form extends moodleform_mod {
 
         // Option to add a meta course or qualification enrolment to the other course.
         $metaexists = false;
+        $qualexists = false;
         if (!empty($this->current->id)) {
             $metaexists = subcourse_meta_exists($this->current->course, $this->current->refcourse);
+            $qualexists = subcourse_qual_exists($this->current->course, $this->current->refcourse);
+        }
+
+        // Do we want the course to be one that students must take? Only an option for qualification
+        $usequal = false;
+        if (file_exists($CFG->dirroot.'/enrol/qualification/lib.php')) {
+            if (enrol_is_enabled('qualification')) {
+                $usequal = true;
+            }
         }
 
         // If qualification is available, we will use that instead of metacourses, as it's the same thing.
         $addmetaradioitems = array();
         $addmetaradioitems[] = $mform->createElement('radio', 'addmeta', '', get_string('noenrolment', 'subcourse'), SUBCOURSE_NO_ENROLMENT);
         $addmetaradioitems[] = $mform->createElement('radio', 'addmeta', '', get_string('addmeta', 'subcourse'), SUBCOURSE_META_ENROLMENT);
+        if ($usequal) {
+            $addmetaradioitems[] = $mform->createElement('radio', 'addmeta', '', get_string('addqual', 'subcourse'), SUBCOURSE_QUAL_ENROLMENT);
+        }
         $addmetaelement = $mform->addGroup($addmetaradioitems, 'radioar', get_string('addenrolment', 'subcourse'), array('<br />'), false);
         $mform->setDefault('addmeta', SUBCOURSE_NO_ENROLMENT);
 
-        if ($metaexists) {
+        if ($qualexists || $metaexists) {
             $refcourseelement->updateAttributes(array('disabled' => true));
             $addmetaelement->updateAttributes(array('disabled' => true));
+        }
+        if ($qualexists) {
+            $mform->setDefault('addmeta', SUBCOURSE_QUAL_ENROLMENT);
         }
         if ($metaexists) {
             $mform->setDefault('addmeta', SUBCOURSE_META_ENROLMENT);

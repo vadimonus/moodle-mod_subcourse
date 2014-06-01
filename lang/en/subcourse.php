@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['addenrolment'] = 'Add an enrolment instance?';
 $string['addmeta'] = 'Add a meta course enrolment instance to this subcourse';
+$string['addqual'] = 'Add a qualification enrolment instance to this subcourse';
 $string['currentgrade'] = 'Your currrent grade: {$a}';
 $string['errfetch'] = 'Unable to fetch grades: error code {$a}';
 $string['errlocalremotescale'] = 'Unable to fetch grades: the remote final grade item uses local scale.';

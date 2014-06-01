@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 define('SUBCOURSE_NO_ENROLMENT', 0);
 define('SUBCOURSE_META_ENROLMENT', 1);
+define('SUBCOURSE_QUAL_ENROLMENT', 2);
 
 require_once($CFG->libdir.'/gradelib.php');
 
@@ -81,6 +82,10 @@ function subcourse_add_instance(stdClass $subcourse) {
         // Add a metacourse enrolment instance to the sub course so that it inherits enrolments
         // from this one.
         subcourse_add_meta($subcourse);
+    } else if ($subcourse->addmeta == SUBCOURSE_QUAL_ENROLMENT) {
+        // Add a qualification enrolment instance to the sub course so that it inherits enrolments
+        // from this one.
+        subcourse_add_qual($subcourse);
     }
 
     return $newid;
@@ -103,9 +108,13 @@ function subcourse_update_instance(stdClass $subcourse) {
         $subcourse->instantredirect = 0;
     }
 
+    $existingqual = subcourse_qual_exists($subcourse->course, $subcourse->refcourse);
     $existingmeta = subcourse_meta_exists($subcourse->course, $subcourse->refcourse);
 
     if ($subcourse->addmeta == SUBCOURSE_NO_ENROLMENT) {
+        if ($existingqual) {
+            subcourse_remove_qual($subcourse);
+        }
         if ($existingmeta) {
             subcourse_remove_meta($subcourse);
         }
@@ -115,6 +124,18 @@ function subcourse_update_instance(stdClass $subcourse) {
         // enrolments from this one. Cannot be removed during update operation.
         if (!$existingmeta) {
             subcourse_add_meta($subcourse);
+        }
+        if ($existingqual) {
+            subcourse_remove_qual($subcourse);
+        }
+    } else if ($subcourse->addmeta == SUBCOURSE_QUAL_ENROLMENT) {
+        // Add metacourse enrolment instance to the sub course so that it inherits
+        // enrolments from this one. Cannot be removed during update operation.
+        if (!$existingqual) {
+            subcourse_add_qual($subcourse);
+        }
+        if ($existingmeta) {
+            subcourse_remove_meta($subcourse);
         }
     }
 
@@ -153,6 +174,24 @@ function subcourse_remove_meta($subcourse) {
 }
 
 /**
+ * Removes an instance of meta course enrolment between the current course and the ref course. This
+ * assumes that there will only be one meta course enrolment between the two and that it will be
+ * created by this module.
+ *
+ * @param stdClass $subcourse
+ * @return bool
+ */
+function subcourse_remove_qual($subcourse) {
+    global $DB;
+
+    if ($instance = $DB->get_record('enrol', array('courseid' => $subcourse->refcourse, 'enrol' => 'qualification', 'customint1' => $subcourse->course))) {
+        $plugin = enrol_get_plugin('qualification');
+        $plugin->delete_instance($instance);
+    }
+    return true;
+}
+
+/**
  * Checks to see if a meta course enrolment already exists for this combination of courses
  *
  * @param int $course
@@ -163,6 +202,20 @@ function subcourse_meta_exists($course, $refcourse) {
     global $DB;
 
     $instance = $DB->get_record('enrol', array('courseid' => $refcourse, 'enrol' => 'meta', 'customint1' => $course));
+    return $instance;
+}
+
+/**
+ * Checks to see if a meta course enrolment already exists for this combination of courses
+ *
+ * @param int $course
+ * @param int $refcourse
+ * @return object
+ */
+function subcourse_qual_exists($course, $refcourse) {
+    global $DB;
+
+    $instance = $DB->get_record('enrol', array('courseid' => $refcourse, 'enrol' => 'qualification', 'customint1' => $course));
     return $instance;
 }
 
@@ -185,6 +238,24 @@ function subcourse_add_meta($subcourse) {
 }
 
 /**
+ * Adds a qualification enrolment to the subcourse
+ *
+ * @param $subcourse
+ * @return bool
+ */
+function subcourse_add_qual($subcourse) {
+    global $CFG, $DB;
+
+    require_once($CFG->dirroot.'/enrol/qualification/locallib.php');
+
+    // Make a new enrolment instance
+    $enrol = enrol_get_plugin('qualification');
+    $course = $DB->get_record('course', array('id' => $subcourse->refcourse), '*', MUST_EXIST);
+    $enrol->add_instance($course, array('customint1' => $subcourse->course));
+    enrol_qualification_sync($course->id);
+}
+
+/**
  * Given an ID of an instance of this module,
  * this function will permanently delete the instance
  * and any data that depends on it.
@@ -204,6 +275,7 @@ function subcourse_delete_instance($id) {
     $DB->delete_records("subcourse", array("id" => $subcourse->id));
 
     subcourse_remove_meta($subcourse);
+    subcourse_remove_qual($subcourse);
 
     // Clean up the gradebook items.
     grade_update('mod/subcourse', $subcourse->course, 'mod', 'subcourse', $subcourse->id, 0, null, array('deleted' => true));
