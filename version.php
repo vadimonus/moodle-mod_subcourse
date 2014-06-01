@@ -20,14 +20,16 @@
  *
  * @package     mod_subcourse
  * @copyright   2008 David Mudrak <david@moodle.com>
+ * @copyright   2011 Matt Gibson <matt@inaura.net>
+ * @copyright   2014 Vadim Dvorovenko <Vadimon@mail.ru>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 $module->component = 'mod_subcourse';
-$module->release = '2.7.0';
-$module->maturity = MATURITY_STABLE;
-$module->version = 2014053100;
+$module->release = '2.7.1';
+$module->maturity = MATURITY_RC;
+$module->version = 2014053103;
 $module->requires = 2014050800;  // Moodle 2.7.0
 $module->cron = 600;

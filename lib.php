@@ -20,10 +20,15 @@
  *
  * @package     mod_subcourse
  * @copyright   2008 David Mudrak <david@moodle.com>
+ * @copyright   2011 Matt Gibson <matt@inaura.net>
+ * @copyright   2014 Vadim Dvorovenko <Vadimon@mail.ru>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
+
+define('SUBCOURSE_NO_ENROLMENT', 0);
+define('SUBCOURSE_META_ENROLMENT', 1);
 
 require_once($CFG->libdir.'/gradelib.php');
 
@@ -72,6 +77,12 @@ function subcourse_add_instance(stdClass $subcourse) {
         subcourse_grades_update($subcourse->course, $newid, $subcourse->refcourse, $subcourse->name, true);
     }
 
+    if ($subcourse->addmeta == SUBCOURSE_META_ENROLMENT) {
+        // Add a metacourse enrolment instance to the sub course so that it inherits enrolments
+        // from this one.
+        subcourse_add_meta($subcourse);
+    }
+
     return $newid;
 }
 
@@ -88,6 +99,25 @@ function subcourse_update_instance(stdClass $subcourse) {
     $subcourse->timemodified = time();
     $subcourse->id = $subcourse->instance;
 
+    if (!isset($subcourse->instantredirect)) {
+        $subcourse->instantredirect = 0;
+    }
+
+    $existingmeta = subcourse_meta_exists($subcourse->course, $subcourse->refcourse);
+
+    if ($subcourse->addmeta == SUBCOURSE_NO_ENROLMENT) {
+        if ($existingmeta) {
+            subcourse_remove_meta($subcourse);
+        }
+
+    } else if ($subcourse->addmeta == SUBCOURSE_META_ENROLMENT) {
+        // Add metacourse enrolment instance to the sub course so that it inherits
+        // enrolments from this one. Cannot be removed during update operation.
+        if (!$existingmeta) {
+            subcourse_add_meta($subcourse);
+        }
+    }
+
     if (!empty($subcourse->refcoursecurrent)) {
         unset($subcourse->refcourse);
     }
@@ -100,8 +130,58 @@ function subcourse_update_instance(stdClass $subcourse) {
         subcourse_grades_update($subcourse->course, $subcourse->id, $subcourse->refcourse, $subcourse->name);
         $DB->set_field('subcourse', 'timefetched', time());
     }
-
+    
     return true;
+}
+
+/**
+ * Removes an instance of meta course enrolment between the current course and the ref course. This
+ * assumes that there will only be one meta course enrolment between the two and that it will be
+ * created by this module.
+ *
+ * @param stdClass $subcourse
+ * @return bool
+ */
+function subcourse_remove_meta($subcourse) {
+    global $DB;
+
+    if ($instance = $DB->get_record('enrol', array('courseid' => $subcourse->refcourse, 'enrol' => 'meta', 'customint1' => $subcourse->course))) {
+        $plugin = enrol_get_plugin('meta');
+        $plugin->delete_instance($instance);
+    }
+    return true;
+}
+
+/**
+ * Checks to see if a meta course enrolment already exists for this combination of courses
+ *
+ * @param int $course
+ * @param int $refcourse
+ * @return object
+ */
+function subcourse_meta_exists($course, $refcourse) {
+    global $DB;
+
+    $instance = $DB->get_record('enrol', array('courseid' => $refcourse, 'enrol' => 'meta', 'customint1' => $course));
+    return $instance;
+}
+
+/**
+ * Adds a meta enrolment to the refcourse
+ *
+ * @param $subcourse
+ * @return bool
+ */
+function subcourse_add_meta($subcourse) {
+    global $CFG, $DB;
+
+    require_once($CFG->dirroot.'/enrol/meta/locallib.php');
+
+    // Make a new enrolment instance
+    $enrol = enrol_get_plugin('meta');
+    $course = $DB->get_record('course', array('id' => $subcourse->refcourse), '*', MUST_EXIST);
+    $enrol->add_instance($course, array('customint1' => $subcourse->course));
+    enrol_meta_sync($course->id);
 }
 
 /**
@@ -122,6 +202,8 @@ function subcourse_delete_instance($id) {
 
     // Remove the instance record.
     $DB->delete_records("subcourse", array("id" => $subcourse->id));
+
+    subcourse_remove_meta($subcourse);
 
     // Clean up the gradebook items.
     grade_update('mod/subcourse', $subcourse->course, 'mod', 'subcourse', $subcourse->id, 0, null, array('deleted' => true));

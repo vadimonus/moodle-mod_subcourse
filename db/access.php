@@ -42,7 +42,7 @@ $capabilities = array(
     'mod/subcourse:begraded' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
+        'archetypes' => array(
             'student' => CAP_ALLOW
         )
     ),
@@ -50,9 +50,10 @@ $capabilities = array(
     'mod/subcourse:fetchgrades' => array(
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
+        'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
         )
     ),
 );

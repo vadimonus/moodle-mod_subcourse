@@ -21,11 +21,15 @@
  * @package     mod_subcourse
  * @category    string
  * @copyright   2008 David Mudrak <david@moodle.com>
+ * @copyright   2011 Matt Gibson <matt@inaura.net>
+ * @copyright   2014 Vadim Dvorovenko <Vadimon@mail.ru>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['addenrolment'] = 'Add an enrolment instance?';
+$string['addmeta'] = 'Add a meta course enrolment instance to this subcourse';
 $string['currentgrade'] = 'Your currrent grade: {$a}';
 $string['errfetch'] = 'Unable to fetch grades: error code {$a}';
 $string['errlocalremotescale'] = 'Unable to fetch grades: the remote final grade item uses local scale.';
@@ -33,12 +37,14 @@ $string['eventgradesfetched'] = 'Grades fetched';
 $string['fetchnow'] = 'Fetch now';
 $string['gotocoursename'] = 'Go to the course <a href="{$a->href}">{$a->name}</a>';
 $string['hiddencourse'] = '*hidden*';
+$string['instantredirect'] = 'Redirect to the subcourse instantly, without an intermediate page?';
 $string['lastfetchnever'] = 'The grades have not been fetched yet';
 $string['lastfetchtime'] = 'Last fetch: {$a}';
 $string['modulename'] = 'Subcourse';
 $string['modulename_help'] = 'The module provides very simple yet useful functionality. When added into a course, it behaves as a graded activity. The grade for each student is taken from a final grade in another course. Combined with metacourses, this allows course designers to organize courses into separate units.';
 $string['modulenameplural'] = 'Subcourses';
 $string['nocoursesavailable'] = 'No courses you could fetch grades from';
+$string['noenrolment'] = 'Do not add an enrolment plugin';
 $string['nosubcourses'] = 'There are no subcourses in this course';
 $string['pluginadministration'] = 'Subcourse administration';
 $string['pluginname'] = 'Subcourse';
@@ -50,3 +56,6 @@ $string['refcoursecurrent'] = 'Keep current reference';
 $string['refcourselabel'] = 'Fetch grades from';
 $string['refcoursenull'] = 'No referenced course configured';
 $string['subcoursename'] = 'Subcourse name';
+$string['subcourse:addinstance'] = 'Add subcourse';
+$string['subcourse:begraded'] = 'To be graded';
+$string['subcourse:fetchgrades'] = 'Fetch grades';

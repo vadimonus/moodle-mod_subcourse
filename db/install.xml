@@ -14,7 +14,8 @@
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="introformat" NEXT="timemodified"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" NEXT="timefetched"/>
         <FIELD NAME="timefetched" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Last time grades were fetched from referenced course" PREVIOUS="timemodified" NEXT="refcourse"/>
-        <FIELD NAME="refcourse" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Referenced course" PREVIOUS="timefetched"/>
+        <FIELD NAME="refcourse" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Referenced course" PREVIOUS="timefetched" NEXT="instantredirect"/>
+        <FIELD NAME="instantredirect" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Should the user be instantly redirected to the course page when viewing a subcourse item, or should they see an intermediate page with a redirect?" PREVIOUS="refcourse"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

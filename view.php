@@ -20,6 +20,8 @@
  *
  * @package     mod_subcourse
  * @copyright   2008 David Mudrak <david@moodle.com>
+ * @copyright   2011 Matt Gibson <matt@inaura.net>
+ * @copyright   2014 Vadim Dvorovenko <Vadimon@mail.ru>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -78,6 +80,11 @@ $event->add_record_snapshot('course_modules', $cm);
 $event->add_record_snapshot('course', $course);
 $event->add_record_snapshot('subcourse', $subcourse);
 $event->trigger();
+
+if ($subcourse->instantredirect) {
+    // Just do the redirect and exit
+    redirect(new moodle_url('/course/view.php', array('id' => $subcourse->refcourse)));
+}
 
 echo $OUTPUT->header();
 

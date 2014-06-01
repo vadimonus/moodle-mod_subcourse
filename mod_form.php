@@ -21,6 +21,8 @@
  * @package     mod_subcourse
  * @category    form
  * @copyright   2008 David Mudrak <david@moodle.com>
+ * @copyright   2011 Matt Gibson <matt@inaura.net>
+ * @copyright   2014 Vadim Dvorovenko <Vadimon@mail.ru>
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -110,9 +112,9 @@ class mod_subcourse_mod_form extends moodleform_mod {
         if (empty($mycourses)) {
             if (empty($includekeepref)) {
                 $options = array(0 => get_string('nocoursesavailable', 'subcourse'));
-                $mform->addElement('select', 'refcourse', get_string('refcourselabel', 'subcourse'), $options);
+                $refcourseelement = $mform->addElement('select', 'refcourse', get_string('refcourselabel', 'subcourse'), $options);
             } else {
-                $mform->addElement('hidden', 'refcourse', 0);
+                $refcourseelement = $mform->addElement('hidden', 'refcourse', 0);
                 $mform->setType('refcourse', PARAM_INT);
             }
 
@@ -133,11 +135,35 @@ class mod_subcourse_mod_form extends moodleform_mod {
                 $options['---'] = array(0 => get_string('none'));
             }
 
-            $mform->addElement('selectgroups', 'refcourse', get_string('refcourselabel', 'subcourse'), $options);
+            $refcourseelement = $mform->addElement('selectgroups', 'refcourse', get_string('refcourselabel', 'subcourse'), $options);
 
             if (!empty($includekeepref)) {
                 $mform->disabledIf('refcourse', 'refcoursecurrent', 'checked');
             }
+        }
+
+        // Instant redirect, or show a page with a description and a link to the course?
+        $instantredirect = $mform->addElement('checkbox', 'instantredirect', get_string('instantredirect', 'subcourse'));
+
+        // Option to add a meta course or qualification enrolment to the other course.
+        $metaexists = false;
+        if (!empty($this->current->id)) {
+            $metaexists = subcourse_meta_exists($this->current->course, $this->current->refcourse);
+        }
+
+        // If qualification is available, we will use that instead of metacourses, as it's the same thing.
+        $addmetaradioitems = array();
+        $addmetaradioitems[] = $mform->createElement('radio', 'addmeta', '', get_string('noenrolment', 'subcourse'), SUBCOURSE_NO_ENROLMENT);
+        $addmetaradioitems[] = $mform->createElement('radio', 'addmeta', '', get_string('addmeta', 'subcourse'), SUBCOURSE_META_ENROLMENT);
+        $addmetaelement = $mform->addGroup($addmetaradioitems, 'radioar', get_string('addenrolment', 'subcourse'), array('<br />'), false);
+        $mform->setDefault('addmeta', SUBCOURSE_NO_ENROLMENT);
+
+        if ($metaexists) {
+            $refcourseelement->updateAttributes(array('disabled' => true));
+            $addmetaelement->updateAttributes(array('disabled' => true));
+        }
+        if ($metaexists) {
+            $mform->setDefault('addmeta', SUBCOURSE_META_ENROLMENT);
         }
 
         // Common module settings ----------------------------------------------
