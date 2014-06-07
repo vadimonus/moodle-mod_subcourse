@@ -59,6 +59,16 @@ function xmldb_subcourse_upgrade($oldversion) {
         }
         upgrade_mod_savepoint(true, 2014053101, 'subcourse');
     }
-
+    if ($oldversion < 2014060202) {
+        // Define field instantredirect to be dropped from subcourse.
+        $table = new xmldb_table('subcourse');
+        $field = new xmldb_field('instantredirect');
+        // Conditionally launch drop field instantredirect.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+        // Subcourse savepoint reached.
+        upgrade_mod_savepoint(true, 2014060202, 'subcourse');
+    }
     return true;
 }
